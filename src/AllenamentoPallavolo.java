@@ -1,13 +1,12 @@
 import java.util.concurrent.Semaphore;
 import java.util.ArrayList;
-import java.util.List;
 
 public class AllenamentoPallavolo {
     public static void main(String[] args) {
         Semaphore postiAttaccanti = new Semaphore(1);
         Semaphore postiDifensori = new Semaphore(1);
 
-        List<Thread> giocatori = new ArrayList<>();
+        ArrayList<Thread> giocatori = new ArrayList<>();
 
         // Creazione iniziale di 3 attaccanti e di 3 difensori
         for (int i = 1; i <= 3; i++) {
