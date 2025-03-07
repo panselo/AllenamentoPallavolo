@@ -45,38 +45,74 @@ class Attaccante extends Thread {
     private Semaphore prontiPerScambio;
     private Semaphore scambioConcluso;
     private Semaphore sincronizzazioneStampe;
+    private Semaphore contrattaccoScambio;
 
-    public Attaccante(String nome, Semaphore postiAttaccanti, Semaphore postiDifensori, Semaphore prontiPerScambio, Semaphore scambioConcluso, Semaphore sincronizzazioneStampe) {
+    public Attaccante(String nome, Semaphore postiAttaccanti, Semaphore postiDifensori, Semaphore prontiPerScambio, Semaphore scambioConcluso, Semaphore sincronizzazioneStampe, Semaphore contrattaccoScambio) {
         this.nome = nome;
         this.postiAttaccanti = postiAttaccanti;
         this.postiDifensori = postiDifensori;
         this.prontiPerScambio = prontiPerScambio;
         this.scambioConcluso = scambioConcluso;
         this.sincronizzazioneStampe = sincronizzazioneStampe;
+        this.contrattaccoScambio = contrattaccoScambio;
     }
 
     @Override
     public void run() {
         try {
             while (true) {
+                // Aspetta che ci sia spazio per un attaccante
                 postiAttaccanti.acquire();
 
-                synchronized (System.out) { // garantisce che le stampe dei thread non si sovrappongano
-                    System.out.println(nome + " sta attaccando.");
-                }
+                // Stampa che l'attaccante sta attaccando
+                sincronizzazioneStampe.acquire();
+                System.out.println(nome + " sta attaccando.");
+                sincronizzazioneStampe.release();
+
+                // Simula l'attacco
                 Thread.sleep(2000);
-                synchronized (System.out) { // garantisce che le stampe dei thread non si sovrappongano
-                    System.out.println(nome + " ha finito di attaccare.");
-                }
 
-                prontiPerScambio.release(); // aspetta che un difensore abbia completato la ricezione prima di procedere
-                scambioConcluso.acquire(); // aspetta il difensore
+                // Stampa che l'attaccante ha finito
+                sincronizzazioneStampe.acquire();
+                System.out.println(nome + " ha finito di attaccare.");
+                sincronizzazioneStampe.release();
 
-                sincronizzazioneStampe.acquire(); // garantisce che il messaggio di scambio venga stampato in ordine corretto
+                Thread.sleep(500);
+
+                // Permette al difensore di iniziare il ricevimento
+                prontiPerScambio.release();
+                // Aspetta che il difensore abbia finito prima di fare il cambio
+                scambioConcluso.acquire();
+
+                // Stampa il cambio di ruolo
+                sincronizzazioneStampe.acquire();
                 System.out.println("--- Scambio ruolo: Attaccante -> Difensore ---");
-                sincronizzazioneStampe.release(); // rilascia il controllo della stampa per permettere la prossima operazione
+                sincronizzazioneStampe.release();
 
-                postiDifensori.release(); // libera un posto per i difensori, permettendo a un nuovo difensore di entrare
+                contrattaccoScambio.acquire();
+
+                Thread.sleep(2000);
+
+                // Stampa che l'attaccante sta attaccando
+                sincronizzazioneStampe.acquire();
+                System.out.println(nome + " sta difendendo.");
+                sincronizzazioneStampe.release();
+
+                // Simula l'attacco
+                Thread.sleep(500);
+
+                // Stampa che l'attaccante ha finito
+                sincronizzazioneStampe.acquire();
+                System.out.println(nome + " ha finito di difendere.");
+                sincronizzazioneStampe.release();
+
+                Thread.sleep(500);
+
+
+                // Libera uno slot per un difensore
+                postiDifensori.release();
+
+                // Pausa per il ciclo
                 Thread.sleep(2000);
             }
         } catch (InterruptedException e) {

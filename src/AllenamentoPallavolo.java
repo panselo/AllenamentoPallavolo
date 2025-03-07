@@ -1,7 +1,7 @@
 //import java.util.concurrent.Semaphore;
 //import java.util.ArrayList;
 //import java.util.List;
-//
+//DA FARE PIU COMPLESSO
 //public class AllenamentoPallavolo {
 //    public static void main(String[] args) {
 //        Semaphore postiAttaccanti = new Semaphore(1);
@@ -44,23 +44,20 @@ public class AllenamentoPallavolo {
         Semaphore prontiPerScambio = new Semaphore(0); // in modo tale che attaccante e difensore si scambiano di ruolo
         Semaphore scambioConcluso = new Semaphore(0); // cosi non ci sono errori nelle stampe ed è piu ordinato
         Semaphore sincronizzazioneStampe = new Semaphore(1); // sincronizza i messaggi in modo tale da evitare ulteriori errori nelle stampe
+        Semaphore contrattaccoScambio = new Semaphore (4);
 
         ArrayList<Thread> giocatori = new ArrayList<>();
 
         // 4 attaccanti e 4 difensori
         for (int i = 1; i <= 4; i++) {
-            giocatori.add(new Attaccante("Attaccante" + i, postiAttaccanti, postiDifensori, prontiPerScambio, scambioConcluso, sincronizzazioneStampe));
-            giocatori.add(new Difensore("Difensore" + i, postiAttaccanti, postiDifensori, prontiPerScambio, scambioConcluso, sincronizzazioneStampe));
+            //giocatori.add(new String ("ciao"));
+            giocatori.add(new Attaccante("Attaccante" + i, postiAttaccanti, postiDifensori, prontiPerScambio, scambioConcluso, sincronizzazioneStampe, contrattaccoScambio));
+            giocatori.add(new Difensore("Difensore" + i, postiAttaccanti, postiDifensori, prontiPerScambio, scambioConcluso, sincronizzazioneStampe, contrattaccoScambio));
         }
 
         // avvia tutti i thread dei giocatori con una breve pausa tra ciascuno
         for (Thread giocatore : giocatori) {
             giocatore.start();
-            try {
-                Thread.sleep(300);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
         }
     }
 }

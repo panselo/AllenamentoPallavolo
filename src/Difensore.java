@@ -45,37 +45,75 @@ class Difensore extends Thread {
     private Semaphore prontiPerScambio;
     private Semaphore scambioConcluso;
     private Semaphore sincronizzazioneStampe;
+    private Semaphore contrattaccoScambio;
 
-    public Difensore(String nome, Semaphore postiAttaccanti, Semaphore postiDifensori, Semaphore prontiPerScambio, Semaphore scambioConcluso, Semaphore sincronizzazioneStampe) {
+    public Difensore(String nome, Semaphore postiAttaccanti, Semaphore postiDifensori, Semaphore prontiPerScambio, Semaphore scambioConcluso, Semaphore sincronizzazioneStampe, Semaphore contrattaccoScambio) {
         this.nome = nome;
         this.postiAttaccanti = postiAttaccanti;
         this.postiDifensori = postiDifensori;
         this.prontiPerScambio = prontiPerScambio;
         this.scambioConcluso = scambioConcluso;
         this.sincronizzazioneStampe = sincronizzazioneStampe;
+        this.contrattaccoScambio = contrattaccoScambio;
     }
 
     @Override
     public void run() {
         try {
             while (true) {
-                prontiPerScambio.acquire(); // attende che un attaccante abbia terminato prima di iniziare la ricezione
-                postiDifensori.acquire(); // occupa un posto come difensore, bloccando se non ci sono posti liberi
-                synchronized (System.out) {
-                    System.out.println(nome + " sta ricevendo.");
-                }
+                // Attende che l'attaccante abbia finito di attaccare
+                prontiPerScambio.acquire();
+                // Acquisisce un posto da difensore
+                postiDifensori.acquire();
+
+                // Stampa che il difensore sta ricevendo
+                sincronizzazioneStampe.acquire();
+                System.out.println(nome + " sta ricevendo.");
+                sincronizzazioneStampe.release();
+
+                // Simula la ricezione
                 Thread.sleep(2000);
-                synchronized (System.out) { // Segnala all'attaccante che la ricezione è completata e può riprendere
-                    System.out.println(nome + " ha finito di ricevere.");
-                }
 
-                scambioConcluso.release(); // permette all'attaccante di continuare
+                // Stampa che il difensore ha finito
+                sincronizzazioneStampe.acquire();
+                System.out.println(nome + " ha finito di ricevere.");
+                sincronizzazioneStampe.release();
 
+                Thread.sleep(2000);
+
+                // Stampa il cambio di ruolo
                 sincronizzazioneStampe.acquire();
                 System.out.println("--- Scambio ruolo: Difensore -> Attaccante ---");
                 sincronizzazioneStampe.release();
 
-                postiAttaccanti.release(); // libera un posto per gli attaccanti, permettendo a un nuovo attaccante di entrare
+                // Consente all'attaccante di proseguire
+                scambioConcluso.release();
+
+                Thread.sleep(500);
+
+                contrattaccoScambio.acquire();
+
+                sincronizzazioneStampe.acquire();
+                System.out.println(nome + " sta contrattaccando.");
+                sincronizzazioneStampe.release();
+
+                // Simula la ricezione
+                Thread.sleep(2000);
+
+                // Stampa che il difensore ha finito
+                sincronizzazioneStampe.acquire();
+                System.out.println(nome + " ha finito di contrattaccare.");
+                sincronizzazioneStampe.release();
+
+                Thread.sleep(500);
+
+                contrattaccoScambio.release();
+
+
+                // Libera uno slot per un attaccante
+                postiAttaccanti.release();
+
+                // Pausa per il ciclo
                 Thread.sleep(2000);
             }
         } catch (InterruptedException e) {
